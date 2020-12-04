@@ -68,8 +68,6 @@ public class Painel extends JPanel implements ActionListener, Runnable {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
         
-        
-        
         if (this.flag) {
             dinossauro.setPosY((int)(getHeight() - dinossauro.getHeight() - 5));
             this.flag = false;
@@ -78,14 +76,13 @@ public class Painel extends JPanel implements ActionListener, Runnable {
         
         if (this.running == false) {
             gameOverScreen(g2d);
-        }
-        
-        this.scoreBoard(g2d);
-        this.lifeStatus(g2d);
-        g2d.drawImage(dinossauro.getCharacter(), dinossauro.getPosX(), dinossauro.getPosY(),
+        } else {
+            this.scoreBoard(g2d);
+            this.lifeStatus(g2d);
+            g2d.drawImage(dinossauro.getCharacter(), dinossauro.getPosX(), dinossauro.getPosY(),
                 dinossauro.getWidth(), dinossauro.getHeight(), this);
-        
-        generateObstacle(g2d);
+            generateObstacle(g2d);
+        }
     }
     
     public void generateObstacle(Graphics2D g2d) {
@@ -127,9 +124,17 @@ public class Painel extends JPanel implements ActionListener, Runnable {
             obstacle.setObstacleXVelocity(40);
         }
         
-        obstacle.setCharacter(new ImageIcon("src/main/java/com/mycompany/dinosaurgame/chrome-tree.png").getImage());
-        g2d.drawImage(obstacle.getCharacter(), obstacle.getPosX(), obstacle.getPosY(),
+        if(generateRandomNumber(0, 5) < 3) {
+            obstacle.setCharacter(new ImageIcon("src/main/java/com/mycompany/dinosaurgame/chrome-tree.png").getImage());
+            g2d.drawImage(obstacle.getCharacter(), obstacle.getPosX(), obstacle.getPosY(),
                 obstacle.getWidth(), obstacle.getHeight(), this);
+        } else {
+            g2d.setColor(new Color(generateRandomNumber(0, 255), generateRandomNumber(0, 255), generateRandomNumber(0, 255)));
+            g2d.fillOval(obstacle.getPosX(), obstacle.getPosY(),
+                obstacle.getWidth(), obstacle.getHeight());
+        }
+        
+        
     }
     
     public void collision() {
@@ -143,7 +148,7 @@ public class Painel extends JPanel implements ActionListener, Runnable {
             if (yBottomPointDino >= obstacle.getPosY()) {
                 if (leftBorderObstacle >= leftBorderDino && leftBorderObstacle <= rightBorderDino) {
                     System.out.println("Collision");
-                    this.dinoLife -= 10;
+                    this.dinoLife -= 20;
                     if(this.dinoLife <= 0) {
                         this.running = false;
                     }
@@ -178,6 +183,7 @@ public class Painel extends JPanel implements ActionListener, Runnable {
             pointFlag -= 10;
         }
     }
+    
     public void update() {
         changeCharacter();
         if(keyboard.isCima()) {
@@ -215,6 +221,7 @@ public class Painel extends JPanel implements ActionListener, Runnable {
     
     public void gameOverScreen(Graphics2D g2d) {
         g2d.setBackground(Color.BLACK);
+        g2d.fillRect(0, 0, getWidth(), getHeight());
         g2d.setColor(Color.RED);
         g2d.setFont(new Font("Arial", Font.BOLD, 50));
         FontMetrics metrics = getFontMetrics(g2d.getFont());
@@ -232,6 +239,10 @@ public class Painel extends JPanel implements ActionListener, Runnable {
         this.add(restart);
     }
     
+    public int generateRandomNumber(int min, int max) {
+        return (int) (Math.random() * (max - min) + min);
+    }
+    
     @Override
     public void actionPerformed(ActionEvent arg0) {
         String cmd = arg0.getActionCommand();
@@ -239,7 +250,7 @@ public class Painel extends JPanel implements ActionListener, Runnable {
         if(flagGamePaused && "Play".equals(cmd)) {
             this.setFocusable(true);
             this.flagGamePaused = false;
-            this.addKeyListener(keyboard);
+            setFocusable(true);
         } else if ("Pause".equals(cmd)) {
             this.flagGamePaused = true;
         } else if ("Reiniciar".equals(cmd)) {
