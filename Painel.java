@@ -9,8 +9,10 @@ import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
@@ -23,7 +25,7 @@ import javax.swing.JButton;
  */
 public class Painel extends JPanel implements ActionListener, Runnable {
     private boolean running = true;
-    private final int gravityForce = 9;
+    private final int gravityForce = 13;
     
     private final Dinossauro dinossauro = new Dinossauro(50, 75, 0, 25);
     private boolean actualDinoCharacter = false;
@@ -32,12 +34,16 @@ public class Painel extends JPanel implements ActionListener, Runnable {
     private int dinoLife = 100;
     private int posLimitY = 0;
     private final int lifeBarWidth = 250;
+    private final int superPowerBarWidth = 250;
+    private int superPowerBarLevel = 0;
+    private boolean superPowerBarFlagActived = false;
+    private int fireDelay = 300;
     private int dinoScore = 0;
     
     
     private int enviornmentColorController = 0;
     private byte enviornmentColor = 0;
-    private final int[] possibleVelocity = {5, 10, 15, 20, 25, 30, 35, 40};
+    private final int[] possibleVelocity = {10, 15, 20, 25, 30, 35, 40, 45};
     private int velocityController = 0;
     private int velocityIndex = 0;
     
@@ -46,7 +52,7 @@ public class Painel extends JPanel implements ActionListener, Runnable {
     
     
     private Obstacle obstacle = new Obstacle(-1, 0);
-    private boolean objectPassedObstacle = false;
+    private boolean objectPassedObstacle = true;
     
     static InputKeyBoard keyboard = new InputKeyBoard();
     private boolean flag = true;
@@ -54,6 +60,9 @@ public class Painel extends JPanel implements ActionListener, Runnable {
     
     
     // Scenario Variables
+    private ScenarioObject sun = new ScenarioObject(710, 10, 40, 40);
+        ;
+    
     private final int sunWidth = 75;
     private final int sunHeight = 75;
     
@@ -71,6 +80,9 @@ public class Painel extends JPanel implements ActionListener, Runnable {
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
+        
+        
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         
          if (enviornmentColor == 0) {
             g2d.setBackground(Color.WHITE);
@@ -98,20 +110,58 @@ public class Painel extends JPanel implements ActionListener, Runnable {
     public void paintEnviornment(Graphics2D g2d) {
         this.scoreBoard(g2d);
         this.lifeStatus(g2d);
+        this.powerStatus(g2d);
+        
         g2d.drawImage(dinossauro.getCharacter(), dinossauro.getPosX(), dinossauro.getPosY(),
             dinossauro.getWidth(), dinossauro.getHeight(), this);
         generateObstacle(g2d);
     }
     
     public void paintScenario(Graphics2D g2d) {
+        AffineTransform aff = g2d.getTransform();
+        
+        
         g2d.setColor(Color.YELLOW);
-        g2d.fillOval((getWidth() - (sunWidth * 2)), 20, sunWidth, sunHeight);
+        g2d.rotate(Math.toRadians(sun.getAngle()), getWidth() - 50, getHeight());
+        g2d.fillOval(sun.getPosX(), sun.getPosY(), sun.getWidth(), sun.getHeight());
+        
+        sun.setAngle(sun.getAngle() - 1);
+        g2d.setTransform(aff);
     }
 
+    public void powerStatus(Graphics2D g2d) {
+        g2d.setColor(Color.gray);
+        g2d.fillRoundRect(10, 80, superPowerBarWidth, 25, 10, 10);
+        g2d.setColor(new Color(0, 157, 255));
+        g2d.fillRoundRect(10, 80, (int)((superPowerBarWidth * superPowerBarLevel) / 5), 25, 10, 10);
+    }
+    
+    
     public void generateObstacle(Graphics2D g2d) {
-        if(obstacle.getPosX() <= 0) {
-            if(objectPassedObstacle == false) {
+        if (superPowerBarFlagActived == true) {
+            g2d.setColor(new Color(255, 10, 20));
+            g2d.fillRoundRect(dinossauro.getPosX() + dinossauro.getWidth() + 5,
+                    dinossauro.getPosY() + 10, 150, 25, 5, 5);
+            int extremeXPositionOfDinoFire = dinossauro.getPosX() + dinossauro.getWidth() + 
+                    5 + 150;
+            
+            if (obstacle.getPosX() <= extremeXPositionOfDinoFire) {
+                obstacle.setPosX(0);
                 dinoScore += 1;
+            }
+            fireDelay -= 3;
+            if (fireDelay <= 0) {
+                fireDelay = 300;
+                superPowerBarFlagActived = false;
+            }
+        } 
+        if(obstacle.getPosX() <= 0) {
+            if(objectPassedObstacle == false && superPowerBarFlagActived == false) {
+                dinoScore += 1;
+                if (superPowerBarLevel < 5) {
+                    superPowerBarLevel += 1;
+                }
+
                 enviornmentColorController += 1;
                 velocityController += 1;
                 if (enviornmentColorController < 10) {
@@ -121,29 +171,30 @@ public class Painel extends JPanel implements ActionListener, Runnable {
                 } else {
                     enviornmentColorController = 0;
                 }
-                
+
                 if (velocityController > 5) {
                     velocityIndex += 1;
                     velocityController = 0;
-                    
+
                     if (velocityIndex >= possibleVelocity.length) {
                         velocityIndex = 0;
                     }
                 }
             } else {
                 this.objectPassedObstacle = false;
+                superPowerBarLevel = 0;
             }
-            
+
             if (dinoLife < 100) {
-                if(generateRandomNumber(1, 6) <= 3) {
+                if(generateRandomNumber(1, 10) <= 3) {
                     lifePoint = new LifePointObject(20, 20);
                     lifePoint.setWidth(20);
                     lifePoint.setHeight(20);
                     lifePoint.setPosY(155);
                     lifePoint.setPosX(getWidth() - 95);
-                    
+
                     g2d.setColor(Color.GREEN);
-                    
+
                     g2d.fillRect(lifePoint.getPosX(), lifePoint.getPosY(), lifePoint.getWidth(), lifePoint.getHeight());
                     lifePointFlag = true;
                 } else {
@@ -159,19 +210,18 @@ public class Painel extends JPanel implements ActionListener, Runnable {
         } else {
             obstacle.setPosX(obstacle.getPosX() - obstacle.getObstacleXVelocity());
         }
-        
+
         if (lifePointFlag) {
             g2d.setColor(Color.GREEN);
             lifePoint.setPosX(lifePoint.getPosX() - obstacle.getObstacleXVelocity());
             g2d.fillRect(lifePoint.getPosX(), lifePoint.getPosY(), lifePoint.getWidth(), lifePoint.getHeight());
         }
-        
+
         g2d.drawImage(obstacle.getCharacter(), obstacle.getPosX(), obstacle.getPosY(),
             obstacle.getWidth(), obstacle.getHeight(), this);
-        
-        
+
         obstacle.setObstacleXVelocity(possibleVelocity[velocityIndex]);
-        
+
     }
     
     public void collision() {
@@ -214,7 +264,7 @@ public class Painel extends JPanel implements ActionListener, Runnable {
             }
             this.changeDinoCharacter = 300;
         }
-        this.changeDinoCharacter -= 20;
+        this.changeDinoCharacter -= 50;
     }
     
     public void update() {
@@ -226,9 +276,15 @@ public class Painel extends JPanel implements ActionListener, Runnable {
                 this.dinoJumping = true;
                 collectedLifePoint();
             }
-        } 
+        }
+        
+        if (keyboard.isDinoFire()) {
+            if (superPowerBarLevel == 5) {
+                superPowerBarFlagActived = true;
+            }
+        }
         if (this.dinoJumping == true){
-            if (dinossauro.getPosY() + 9 < posLimitY) {
+            if (dinossauro.getPosY() + gravityForce < posLimitY) {
                 this.dinoJumping = true;
                 dinossauro.setPosY(dinossauro.getPosY() + gravityForce);
                 collectedLifePoint();
@@ -263,10 +319,10 @@ public class Painel extends JPanel implements ActionListener, Runnable {
     }
     public void lifeStatus(Graphics2D g2d) {
         g2d.setColor(Color.gray);
-        g2d.fillRect(10, 40, lifeBarWidth, 25);
+        g2d.fillRoundRect(10, 40, lifeBarWidth, 25, 10, 10);
         g2d.setColor(this.dinoLife <= 30 ? new Color(255, 0, 0) : this.dinoLife <= 60 ? new Color(255, 178, 12) : new Color(50, 255, 84));
         
-        g2d.fillRect(10, 40, (int)((lifeBarWidth * dinoLife) / 100), 25);
+        g2d.fillRoundRect(10, 40, (int)((lifeBarWidth * dinoLife) / 100), 25, 10, 10);
     }
     
     public void scoreBoard(Graphics2D g2d) {
@@ -312,7 +368,7 @@ public class Painel extends JPanel implements ActionListener, Runnable {
                 repaint();
                 update();
                 collision();
-                Thread.sleep(25);
+                Thread.sleep(1000/24);
                 repaint();
             }
             thread.join();

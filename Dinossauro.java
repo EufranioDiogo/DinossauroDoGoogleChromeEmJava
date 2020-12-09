@@ -11,7 +11,7 @@ import java.awt.Image;
  * @author ed
  */
 public class Dinossauro {
-    private int width, height, maxJump = 200, posY, posX;
+    private int width, height, maxJump = 150, posY, posX;
     private int xVelocity = 5;
     private Image character;
 
