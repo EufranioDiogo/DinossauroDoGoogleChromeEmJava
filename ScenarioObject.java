@@ -30,8 +30,12 @@ public class ScenarioObject {
     }
     
     public void drawMoon(Graphics2D g2d) {
-        
+        g2d.setColor(Color.WHITE);
+        g2d.fillOval(posX, posY, width, height);
+        g2d.setColor(Color.BLACK);
+        g2d.fillOval(posX + 10, posY, width, height);
     }
+    
 
     public int getPosX() {
         return posX;
