@@ -4,22 +4,21 @@
  * and open the template in the editor.
  */
 package com.mycompany.dinosaurgame;
+
 import java.awt.Image;
 
 /**
  *
  * @author ed
  */
-public class Dinossauro {
-    private int width, height, maxJump = 150, posY, posX;
-    private int xVelocity = 5;
+public class LifePointObject {
+    private int width, height, posY, posX;
+    private int obstacleXVelocity = 5;
     private Image character;
 
-    Dinossauro(int width, int height, int posY, int posX) {
+    public LifePointObject(int width, int height) {
         this.width = width;
         this.height = height;
-        this.posX = posX;
-        this.posY = posY;
     }
     public int getWidth() {
         return width;
@@ -33,16 +32,8 @@ public class Dinossauro {
         return height;
     }
 
-    public void setHeight(int heigth) {
-        this.height = heigth;
-    }
-
-    public int getMaxJump() {
-        return maxJump;
-    }
-
-    public void setMaxJump(int maxJump) {
-        this.maxJump = maxJump;
+    public void setHeight(int height) {
+        this.height = height;
     }
 
     public int getPosY() {
@@ -69,14 +60,11 @@ public class Dinossauro {
         this.character = character;
     }
 
-    public int getxVelocity() {
-        return xVelocity;
+    public int getObstacleXVelocity() {
+        return obstacleXVelocity;
     }
 
-    public void setxVelocity(int xVelocity) {
-        this.xVelocity = xVelocity;
+    public void setObstacleXVelocity(int obstacleXVelocity) {
+        this.obstacleXVelocity = obstacleXVelocity;
     }
-    
-    
-    
 }

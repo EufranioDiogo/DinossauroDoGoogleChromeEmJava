@@ -19,7 +19,7 @@ public class InputKeyBoard implements KeyListener
     private boolean baixo = false;
     private boolean left = false;
     private boolean right = false;
-    
+    private boolean dinoFire = false;
 
     public boolean isLeft()
     {
@@ -61,6 +61,14 @@ public class InputKeyBoard implements KeyListener
     {
         this.baixo = baixo;
     }
+
+    public boolean isDinoFire() {
+        return dinoFire;
+    }
+
+    public void setDinoFire(boolean dinoFire) {
+        this.dinoFire = dinoFire;
+    }
     
     
     @Override
@@ -69,7 +77,7 @@ public class InputKeyBoard implements KeyListener
         System.out.println("Key Typed: " + arg0.getKeyCode());
     }
 
-    // Cuidado esse mambo executa uma vez e o mambo baza
+    // Cuidado esse metodo executa uma vez e depois não para mais
     @Override
     public void keyPressed(KeyEvent arg0) 
     {
@@ -88,6 +96,9 @@ public class InputKeyBoard implements KeyListener
                 break;
             case KeyEvent.VK_RIGHT:
                 right = true;
+                break;
+            case KeyEvent.VK_SPACE:
+                dinoFire = true;
                 break;
         }
     }
@@ -109,6 +120,9 @@ public class InputKeyBoard implements KeyListener
                 break;
             case KeyEvent.VK_RIGHT:
                 right = false;
+                break;
+            case KeyEvent.VK_SPACE:
+                dinoFire = false;
                 break;
         }
     }
