@@ -14,22 +14,25 @@ import javax.swing.ImageIcon;
 public class ObstacleList {
     public Obstacle headObstacle, tailObstacle;
     private int quantObstacle;
+    private int limitObstacle;
     
-    public ObstacleList() {
-        
+    public ObstacleList(int limitObstacle) {
+        this.limitObstacle = limitObstacle;
     }
     public void add(Obstacle obstacle) {
-        if (this.isEmpty()) {
-            this.headObstacle = obstacle;
-            this.tailObstacle = this.headObstacle;
-            this.headObstacle.setNextObstacle(this.tailObstacle);
-            this.tailObstacle.setPreviousObstacle(this.headObstacle);
-        } else {
-            this.tailObstacle.setNextObstacle(obstacle);
-            obstacle.setPreviousObstacle(this.tailObstacle);
-            this.tailObstacle = obstacle;
+        if (this.quantObstacle < this.limitObstacle) {
+            if (this.isEmpty()) {
+                this.headObstacle = obstacle;
+                this.tailObstacle = this.headObstacle;
+                this.headObstacle.setNextObstacle(this.tailObstacle);
+                this.tailObstacle.setPreviousObstacle(this.headObstacle);
+            } else {
+                this.tailObstacle.setNextObstacle(obstacle);
+                obstacle.setPreviousObstacle(this.tailObstacle);
+                this.tailObstacle = obstacle;
+            }
+            this.quantObstacle++;
         }
-        this.quantObstacle++;
     }
     
     public Obstacle remove() {
