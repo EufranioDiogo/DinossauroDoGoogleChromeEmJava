@@ -15,10 +15,18 @@ public class Obstacle {
     private int width, height, posY, posX;
     private int obstacleXVelocity = 5;
     private Image character;
+    private Obstacle previousObstacle, nextObstacle;
+    private boolean dinoCollided = false;
 
     public Obstacle(int width, int height) {
         this.width = width;
         this.height = height;
+    }
+    public Obstacle(int width, int height, int posX, int posY) {
+        this.width = width;
+        this.height = height;
+        this.posX = posX;
+        this.posY = posY;
     }
     public int getWidth() {
         return width;
@@ -68,6 +76,26 @@ public class Obstacle {
         this.obstacleXVelocity = obstacleXVelocity;
     }
     
+    public void setPreviousObstacle(Obstacle obstacle) {
+        this.previousObstacle = obstacle;
+    }
     
+    public void setNextObstacle(Obstacle obstacle) {
+        this.nextObstacle = obstacle;
+    }
     
+    public Obstacle getPreviousObstacle() {
+        return this.previousObstacle;
+    }
+    
+    public Obstacle getNextObstacle() {
+        return this.nextObstacle;
+    }
+    
+    public void setDinoCollided(boolean obstaclePassed) {
+        this.dinoCollided = obstaclePassed;
+    }
+    public boolean getDinoCollided() {
+        return this.dinoCollided;
+    }
 }

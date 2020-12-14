@@ -7,7 +7,6 @@ package com.mycompany.dinosaurgame;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
-import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -15,7 +14,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
-import java.awt.geom.Rectangle2D;
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 import javax.swing.JButton;
@@ -41,7 +39,6 @@ public class Painel extends JPanel implements ActionListener, Runnable {
     private boolean superPowerBarFlagActived = false;
     private int fireDelay = 300;
     private int dinoScore = 0;
-    private GradientPaint gradient;
     
     
     private int dayPeriod = 0;
@@ -54,9 +51,8 @@ public class Painel extends JPanel implements ActionListener, Runnable {
     private LifePointObject lifePoint;
     private boolean lifePointFlag;
     
-    
-    private Obstacle obstacle = new Obstacle(-1, 0);
-    private boolean objectPassedObstacle = true;
+    private int obstacleDistanceDelay = 200;
+    private final ObstacleList obstaclesList = new ObstacleList();
     
     static InputKeyBoard keyboard = new InputKeyBoard();
     private boolean flag = true;
@@ -95,6 +91,7 @@ public class Painel extends JPanel implements ActionListener, Runnable {
             dinossauro.setPosY((int)(getHeight() - dinossauro.getHeight() - 5));
             this.flag = false;
             posLimitY = dinossauro.getPosY();
+            obstaclesList.add(new Obstacle(30, (int)(dinossauro.getHeight() * 0.75), getWidth() + 10, getHeight() - (int)(dinossauro.getHeight() * 0.75)));
         }
         
         if (this.running == false) {
@@ -111,7 +108,7 @@ public class Painel extends JPanel implements ActionListener, Runnable {
         
         g2d.drawImage(dinossauro.getCharacter(), dinossauro.getPosX(), dinossauro.getPosY(),
             dinossauro.getWidth(), dinossauro.getHeight(), this);
-        generateObstacle(g2d);
+        obstacleEngine(g2d);
     }
     
     public void paintScenario(Graphics2D g2d) {
@@ -201,36 +198,77 @@ public class Painel extends JPanel implements ActionListener, Runnable {
     }
     
     
-    public void generateObstacle(Graphics2D g2d) {
-        if (superPowerBarFlagActived == true) {
-            
-            gradient = new GradientPaint(dinossauro.getPosX() + dinossauro.getWidth() + 5, dinossauro.getPosY() + 10,
-                    new Color(245, 0, 0), 150, 25, new Color(255, 93, 0));
-            g2d.setPaint(gradient);
-            g2d.fill(new Rectangle2D.Double(dinossauro.getPosX() + dinossauro.getWidth() + 5,
-                    dinossauro.getPosY() + 10, 150, 25));
-            int extremeXPositionOfDinoFire = dinossauro.getPosX() + dinossauro.getWidth() + 
-                    5 + 150;
-            
-            if (obstacle.getPosX() <= extremeXPositionOfDinoFire) {
-                obstacle.setPosX(0);
-                dinoScore += 1;
+    public void obstacleEngine(Graphics2D g2d) {
+        obstacleDistanceDelay -= 2;
+        
+        if (obstacleDistanceDelay <= 0) {
+            Obstacle obstacle = new Obstacle(30, (int)(dinossauro.getHeight() * 0.75), getWidth() + 10, getHeight() - (int)(dinossauro.getHeight() * 0.75));
+            if (this.enviornmentColor == 0) {
+                obstacle.setCharacter(new ImageIcon("src/main/java/com/mycompany/dinosaurgame/chrome-tree.png").getImage());
+            } else {
+                obstacle.setCharacter(new ImageIcon("src/main/java/com/mycompany/dinosaurgame/chrome-tree-white.png").getImage());
             }
-            fireDelay -= 3;
-            if (fireDelay <= 0) {
-                fireDelay = 300;
-                superPowerBarFlagActived = false;
+            obstaclesList.add(obstacle);
+            obstacleDistanceDelay = 200;
+        }
+        
+        
+        obstaclesList.forwardObstacle(possibleVelocity, velocityIndex);
+        
+        generateLifePoint(g2d);
+        verifyCollisionWithDinoFire(g2d);
+        verifyDinoPoint();
+        
+        verifyObstaclesAlreadyPassed();
+        changeObstaclePicture(g2d);
+    }
+    
+    public void changeObstaclePicture(Graphics2D g2d) {
+        Obstacle obstacleAux = this.obstaclesList.getHeadObstacle();
+        int counter = 0;
+        
+        while(counter < this.obstaclesList.getQuantObstacles()) {
+            if (enviornmentColor == 0) {
+                obstacleAux.setCharacter(new ImageIcon("src/main/java/com/mycompany/dinosaurgame/chrome-tree.png").getImage());
+            } else {
+                obstacleAux.setCharacter(new ImageIcon("src/main/java/com/mycompany/dinosaurgame/chrome-tree-white.png").getImage());
             }
-        } 
-        if(obstacle.getPosX() <= 0) {
-            if(objectPassedObstacle == false && superPowerBarFlagActived == false) {
+            g2d.drawImage(obstacleAux.getCharacter(), obstacleAux.getPosX(), obstacleAux.getPosY(),
+            obstacleAux.getWidth(), obstacleAux.getHeight(), this);
+            obstacleAux = obstacleAux.getNextObstacle();
+            counter++;
+        }
+    }
+    
+    public void verifyObstaclesAlreadyPassed() {
+        Obstacle obstacleAux = this.obstaclesList.getHeadObstacle();
+        int counter = 0;
+        
+        while(counter < this.obstaclesList.getQuantObstacles()) {
+            if(obstacleAux.getPosX() <= 0) {
+                obstacleAux.setPosX(getWidth() + 10);
+                obstaclesList.add(obstaclesList.remove());
+            } 
+            obstacleAux = obstacleAux.getNextObstacle();
+            counter++;
+        }
+    }
+    
+    public void verifyDinoPoint() {
+        Obstacle obstacleAux = this.obstaclesList.getHeadObstacle();
+        int counter = 0;
+        
+        while(counter < this.obstaclesList.getQuantObstacles()) {
+            if(obstacleAux.getPosX() + obstacleAux.getWidth() < dinossauro.getPosX() && 
+               obstacleAux.getDinoCollided() == false && 
+               superPowerBarFlagActived == false) {
+                
                 dinoScore += 1;
                 if (superPowerBarLevel < 5) {
                     superPowerBarLevel += 1;
                 }
-                
-                velocityController += 1;
 
+                velocityController += 1;
                 if (velocityController > 5) {
                     velocityIndex += 1;
                     velocityController = 0;
@@ -239,78 +277,96 @@ public class Painel extends JPanel implements ActionListener, Runnable {
                         velocityIndex = 0;
                     }
                 }
-            } else {
-                this.objectPassedObstacle = false;
-                superPowerBarLevel = 0;
+                break;
             }
+            obstacleAux = obstacleAux.getNextObstacle();
+            counter++;
+        }
+        velocityIndex = 0;
+    }
+    public void generateLifePoint(Graphics g2d) {
+        if (dinoLife < 100) {
+            if(generateRandomNumber(1, 10) <= 3) {
+                lifePoint = new LifePointObject(20, 20);
+                lifePoint.setWidth(20);
+                lifePoint.setHeight(20);
+                lifePoint.setPosY(155);
+                lifePoint.setPosX(getWidth() - 95);
 
-            if (dinoLife < 100) {
-                if(generateRandomNumber(1, 10) <= 3) {
-                    lifePoint = new LifePointObject(20, 20);
-                    lifePoint.setWidth(20);
-                    lifePoint.setHeight(20);
-                    lifePoint.setPosY(155);
-                    lifePoint.setPosX(getWidth() - 95);
+                g2d.setColor(Color.GREEN);
 
-                    g2d.setColor(Color.GREEN);
-
-                    g2d.fillRect(lifePoint.getPosX(), lifePoint.getPosY(), lifePoint.getWidth(), lifePoint.getHeight());
-                    lifePointFlag = true;
-                } else {
-                    lifePointFlag = false;
-                }
+                g2d.fillRect(lifePoint.getPosX(), lifePoint.getPosY(), lifePoint.getWidth(), lifePoint.getHeight());
+                lifePointFlag = true;
             } else {
                 lifePointFlag = false;
             }
-            obstacle = new Obstacle(30, (int)(dinossauro.getHeight() * 0.75));
-            if (this.enviornmentColor == 0) {
-                obstacle.setCharacter(new ImageIcon("src/main/java/com/mycompany/dinosaurgame/chrome-tree.png").getImage());
-            } else {
-                obstacle.setCharacter(new ImageIcon("src/main/java/com/mycompany/dinosaurgame/chrome-tree-white.png").getImage());
-            }
-            
-            obstacle.setPosY(getHeight() - obstacle.getHeight());
-            obstacle.setPosX(getWidth() + 10);
         } else {
-            obstacle.setPosX(obstacle.getPosX() - obstacle.getObstacleXVelocity());
-            if (this.enviornmentColor == 0) {
-                obstacle.setCharacter(new ImageIcon("src/main/java/com/mycompany/dinosaurgame/chrome-tree.png").getImage());
-            } else {
-                obstacle.setCharacter(new ImageIcon("src/main/java/com/mycompany/dinosaurgame/chrome-tree-white.png").getImage());
-            }
+            lifePointFlag = false;
         }
-
+        
         if (lifePointFlag) {
             g2d.setColor(Color.GREEN);
-            lifePoint.setPosX(lifePoint.getPosX() - obstacle.getObstacleXVelocity());
+            lifePoint.setPosX(lifePoint.getPosX() - possibleVelocity[velocityIndex]);
             g2d.fillRect(lifePoint.getPosX(), lifePoint.getPosY(), lifePoint.getWidth(), lifePoint.getHeight());
         }
-
-        g2d.drawImage(obstacle.getCharacter(), obstacle.getPosX(), obstacle.getPosY(),
-            obstacle.getWidth(), obstacle.getHeight(), this);
-
-        obstacle.setObstacleXVelocity(possibleVelocity[velocityIndex]);
-
     }
     
-    public void collision() {
+    public void verifyCollisionWithDinoFire(Graphics g2d) {
+        if (superPowerBarFlagActived == true) {
+            g2d.setColor(Color.RED);
+            g2d.fillRoundRect(dinossauro.getPosX() + dinossauro.getWidth() + 5,
+                    dinossauro.getPosY() + 10, 150, 25, 10, 10);
+            int extremeXPositionOfDinoFire = dinossauro.getPosX() + dinossauro.getWidth() + 
+                    5 + 150;
+            
+            
+            Obstacle obstacleAux = obstaclesList.getHeadObstacle();
+            int counter = 0;
+        
+            while(counter < this.obstaclesList.getQuantObstacles()) {
+               if (obstacleAux.getPosX() <= extremeXPositionOfDinoFire) {
+                    obstacleAux.setPosX(0);
+                    dinoScore += 1;
+                }
+               
+                fireDelay -= 3;
+            
+                if (fireDelay <= 0) {
+                    fireDelay = 300;
+                    superPowerBarFlagActived = false;
+                }
+                obstacleAux = obstacleAux.getNextObstacle();
+                counter++;
+            }
+            
+        }
+    }
+    
+    public void verifyCollision(ObstacleList obstacleList) {
+        Obstacle obstacleAux = obstacleList.getHeadObstacle();
         int yBottomPointDino = dinossauro.getHeight() + dinossauro.getPosY();
         int rightBorderDino = dinossauro.getWidth() + dinossauro.getPosX();
         int leftBorderDino = dinossauro.getPosX();
+        int leftBorderObstacle;
+        int counter = 0;
         
-        int leftBorderObstacle = obstacle.getPosX();
-        
-        if (objectPassedObstacle == false) {
-            if (yBottomPointDino >= obstacle.getPosY()) {
-                if (leftBorderObstacle >= leftBorderDino && leftBorderObstacle <= rightBorderDino) {
-                    System.out.println("Collision");
-                    this.dinoLife -= 20;
-                    if(this.dinoLife <= 0) {
-                        this.running = false;
+        while(counter < this.obstaclesList.getQuantObstacles()) {
+            leftBorderObstacle = obstacleAux.getPosX();
+            if (obstacleAux.getDinoCollided() == false) {
+                if (yBottomPointDino >= obstacleAux.getPosY()) {
+                    if (leftBorderObstacle >= leftBorderDino && leftBorderObstacle <= rightBorderDino) {
+                        System.out.println("Collision");
+                        this.dinoLife -= 10;
+                        if(this.dinoLife <= 0) {
+                            this.running = false;
+                        }
+                        obstacleAux.setDinoCollided(true);
+                        break;
                     }
-                    objectPassedObstacle = true;
                 }
             }
+            obstacleAux = obstacleAux.getNextObstacle();
+            counter++;
         }
     }
 
@@ -441,7 +497,7 @@ public class Painel extends JPanel implements ActionListener, Runnable {
             while(running){
                 repaint();
                 update();
-                collision();
+                verifyCollision(obstaclesList);
                 Thread.sleep(1000/24);
                 repaint();
             }

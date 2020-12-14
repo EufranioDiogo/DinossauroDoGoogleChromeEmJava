@@ -4,7 +4,6 @@
  * and open the template in the editor.
  */
 package com.mycompany.dinosaurgame;
-import java.awt.event.ActionListener;
 import javax.swing.JFrame;
 /**
  *
