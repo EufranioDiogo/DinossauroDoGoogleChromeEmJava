@@ -17,6 +17,8 @@ public class Obstacle {
     private Image character;
     private Obstacle previousObstacle, nextObstacle;
     private boolean dinoCollided = false;
+    private int obstacleDistance;
+    private int obstacleDistanceBetween;
 
     public Obstacle(int width, int height) {
         this.width = width;
@@ -98,4 +100,22 @@ public class Obstacle {
     public boolean getDinoCollided() {
         return this.dinoCollided;
     }
+    
+    public void setObstacleDistance(int distanceObstacle) {
+        this.obstacleDistance = distanceObstacle;
+    }
+    
+    public int getObstacleDistance() {
+        return this.obstacleDistance;
+    }
+
+    public int getObstacleDistanceBetween() {
+        return obstacleDistanceBetween;
+    }
+
+    public void setObstacleDistanceBetween(int obstacleDistanceBetween) {
+        this.obstacleDistanceBetween = obstacleDistanceBetween;
+    }
+    
+    
 }
