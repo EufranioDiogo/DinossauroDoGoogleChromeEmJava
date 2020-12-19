@@ -233,14 +233,11 @@ public class Painel extends JPanel implements ActionListener, Runnable {
         int counter = 0;
         
         while(counter < this.obstaclesList.getQuantObstacles()) {
-            g2d.setColor(Color.gray);
             if (enviornmentColor == 0) {
                 obstacleAux.setCharacter(new ImageIcon("src/main/java/com/mycompany/dinosaurgame/chrome-tree.png").getImage());
             } else {
                 obstacleAux.setCharacter(new ImageIcon("src/main/java/com/mycompany/dinosaurgame/chrome-tree-white.png").getImage());
             }
-            g2d.fillRect(obstacleAux.getPosX(), obstacleAux.getPosY(),
-            obstacleAux.getWidth(), obstacleAux.getHeight());
             g2d.drawImage(obstacleAux.getCharacter(), obstacleAux.getPosX(), obstacleAux.getPosY(),
             obstacleAux.getWidth(), obstacleAux.getHeight(), this);
             obstacleAux = obstacleAux.getNextObstacle();
@@ -340,6 +337,7 @@ public class Painel extends JPanel implements ActionListener, Runnable {
                 if (fireDelay <= 0) {
                     fireDelay = 300;
                     superPowerBarFlagActived = false;
+                    superPowerBarLevel = 0;
                 }
                 obstacleAux = obstacleAux.getNextObstacle();
                 counter++;
@@ -466,7 +464,7 @@ public class Painel extends JPanel implements ActionListener, Runnable {
                     || (dinoLeftLimit >= leftLimitOfLifePoint && dinoLeftLimit <= rightLimitOfLifePoint)) {
                 if (dinoLife < 100) {
 
-                    dinoLife += 20;
+                    dinoLife += 10;
                     lifePointFlag = false;
                 }
             }
@@ -491,7 +489,7 @@ public class Painel extends JPanel implements ActionListener, Runnable {
     }
     
     public void gameOverScreen(Graphics2D g2d) {
-        g2d.setBackground(Color.BLACK);
+        g2d.setColor(Color.WHITE);
         g2d.fillRect(0, 0, getWidth(), getHeight());
         g2d.setColor(Color.RED);
         g2d.setFont(new Font("Arial", Font.BOLD, 50));
